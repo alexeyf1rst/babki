@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Своё дело">
+<meta name="theme-color" id="tc-light" content="#F4F7F5" media="(prefers-color-scheme: light)">
+<meta name="theme-color" id="tc-dark" content="#101A17" media="(prefers-color-scheme: dark)">
+<title>Своё дело</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="icon" href="icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preload" href="fonts/manrope-400-800-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/oswald-500-700-cyrillic.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header id="hdr">
+  <div class="hdin">
+    <div class="ring">
+      <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+        <circle cx="23" cy="23" r="19" fill="none" stroke="var(--line)" stroke-width="4"></circle>
+        <circle id="ringp" cx="23" cy="23" r="19" fill="none" stroke="var(--mark)" stroke-width="4"
+                stroke-linecap="round" stroke-dasharray="119.4" stroke-dashoffset="119.4"
+                style="transition:stroke-dashoffset .6s cubic-bezier(.2,.9,.3,1)"></circle>
+      </svg>
+      <div class="lvl" id="lvlnum">1</div>
+    </div>
+    <div class="rank">
+      <b id="rankname">Ноль клиентов</b>
+      <span id="rankxp">0 / 400 XP</span>
+    </div>
+    <div class="chips">
+      <span class="chip fire" id="streakchip" title="серия дней с касаниями">
+        <svg width="11" height="13" viewBox="0 0 11 13" aria-hidden="true"><path d="M5.5.5C6 3 3 3.4 3 6.2 3 7.4 3.7 8 4.4 8 3.9 5.9 6.2 5.3 6.2 3.3c1.5 1 2.3 2.6 2.3 4.2 0 2.6-1.6 4.5-3.9 4.5S1 10.2 1 7.6C1 4.4 4.6 3.4 5.5.5Z" fill="currentColor"/></svg>
+        <b id="streaknum">0</b></span>
+      <span class="chip cr" title="жетоны">◆ <b id="toknum">0</b></span>
+      <button class="chip ic" data-act="theme" title="светлая / тёмная тема" aria-label="Сменить тему">◐</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ СЕГОДНЯ ============ -->
+<section class="view on" id="v-day">
+  <div id="warn"></div>
+
+  <div class="today">
+    <div class="dline"><b id="dow">сегодня</b><span id="dnum"></span></div>
+    <div class="goal">
+      <div class="big" id="taptoday">0</div>
+      <div class="of">/ <span id="tapgoal">2</span> <span id="tapword">касания</span></div>
+      <div class="st" id="daystate">норма на сегодня</div>
+    </div>
+    <div class="gbar" id="gbar"><i></i></div>
+    <div class="row" style="margin-top:13px">
+      <button class="btn w" id="closeday" data-act="closeday">закрыть день</button>
+    </div>
+    <div id="yday"></div>
+    <div class="tiny" style="margin-top:9px" id="freezes"></div>
+  </div>
+
+  <div id="whybox"></div>
+  <div id="spinbox"></div>
+
+  <div class="h">Касание <em>в один тап</em></div>
+  <div class="card">
+    <div class="tiny" style="margin-bottom:10px">Написала кому-то — впиши, кому. Это и есть касание:
+      человек попадает в воронку, день двигается.</div>
+    <input type="text" id="tp-t" placeholder="кому: салон «Лак», Аня-фотограф" maxlength="52">
+    <div class="row" style="margin-top:8px">
+      <select id="tp-c"></select>
+      <button class="btn sm" data-act="touch">написала</button>
+    </div>
+  </div>
+
+  <div id="coldbox"></div>
+  <div id="jobbox"></div>
+
+  <div class="h">Дела <em>дня</em></div>
+  <div id="quests"></div>
+
+  <details class="add">
+    <summary>+ добавить своё дело</summary>
+    <div class="body">
+      <input type="text" id="nq-t" placeholder="например: собрать отзывы в один файл" maxlength="60">
+      <div class="row">
+        <select id="nq-c">
+          <option value="поиск">поиск</option>
+          <option value="дело" selected>дело</option>
+          <option value="голова">голова</option>
+        </select>
+        <input type="number" id="nq-x" value="15" min="5" max="60" step="5" style="width:80px">
+        <button class="btn sm" data-act="addquest">ок</button>
+      </div>
+      <div class="tiny">XP от 5 до 60. Ставь честно: большое дело — больше очков.</div>
+    </div>
+  </details>
+
+  <div class="h">Норма <em>касаний</em></div>
+  <div class="card" id="quotabox"></div>
+
+  <div id="hintbox"></div>
+</section>
+
+<!-- ============ ЛЮДИ ============ -->
+<section class="view" id="v-leads">
+  <div class="h">Воронка <small id="leadcount"></small></div>
+  <div class="card" id="funnel"></div>
+
+  <div class="h">Квота <em>отказов</em></div>
+  <div class="card" id="nobox"></div>
+
+  <details class="add" style="margin-top:10px" id="addlead">
+    <summary>+ добавить человека</summary>
+    <div class="body">
+      <input type="text" id="nl-t" placeholder="кто: салон «Лак», Аня-фотограф" maxlength="52">
+      <div class="row">
+        <select id="nl-c"></select>
+        <input type="number" id="nl-s" placeholder="сумма" min="0" max="100000" style="width:96px">
+      </div>
+      <input type="text" id="nl-n" placeholder="заметка: что у них болит, о чём договорились" maxlength="90">
+      <div class="row">
+        <button class="btn sm gh" data-act="addlead" data-id="new">только нашла</button>
+        <button class="btn sm" data-act="addlead" data-id="sent">уже написала</button>
+      </div>
+      <div class="tiny">Сумма — сколько с него реально взять. Можно не заполнять.</div>
+    </div>
+  </details>
+
+  <div class="h">Люди</div>
+  <div class="stack" id="leads"></div>
+</section>
+
+<!-- ============ ЗАКАЗЫ ============ -->
+<section class="view" id="v-jobs">
+  <div class="h">Заказы <small id="jobcount"></small></div>
+  <div class="stack" id="jobs"></div>
+
+  <details class="add" style="margin-top:10px">
+    <summary>+ новый заказ</summary>
+    <div class="body">
+      <input type="text" id="nj-t" placeholder="Лендинг для студии маникюра" maxlength="46">
+      <div class="row">
+        <input type="number" id="nj-f" placeholder="цена" min="0" max="100000" style="width:104px">
+        <input type="number" id="nj-n" value="8" min="1" max="40" placeholder="этапов" style="width:96px">
+      </div>
+      <input type="date" id="nj-d">
+      <button class="btn" data-act="addjob">создать</button>
+      <div class="tiny">Этапов по умолчанию восемь: созвон, структура, первый экран, блоки, адаптив,
+        формы, правки, сдача. Каждый закрытый этап снимает заказу полосу.</div>
+    </div>
+  </details>
+
+  <div class="h">Прайс <small id="pricehint"></small></div>
+  <div class="card" id="price"></div>
+</section>
+
+<!-- ============ ДЕНЬГИ ============ -->
+<section class="view" id="v-money">
+  <div class="plan" id="planbox"></div>
+
+  <div class="h">Этот <em>месяц</em></div>
+  <div class="card" id="monthbox"></div>
+
+  <div class="h">Цели <small id="goalcount"></small></div>
+  <div class="stack" id="goals"></div>
+
+  <details class="add" style="margin-top:10px">
+    <summary>+ новая цель</summary>
+    <div class="body">
+      <input type="text" id="ng-t" placeholder="На что: переезд, мак, подписка" maxlength="46">
+      <div class="row">
+        <input type="number" id="ng-s" placeholder="сколько" min="1" max="10000000" style="width:110px">
+        <select id="ng-p">
+          <option value="once" selected>разово</option>
+          <option value="month">каждый месяц</option>
+        </select>
+      </div>
+      <input type="date" id="ng-d">
+      <button class="btn" data-act="addgoal">создать</button>
+      <div class="tiny">Дата — к какому числу хочется. От ближайшей даты приложение и считает норму
+        касаний на день. Без даты считает на три месяца вперёд.</div>
+    </div>
+  </details>
+
+  <div class="h">Касса <small id="balhint"></small></div>
+  <div class="card" id="cash"></div>
+
+  <details class="add" style="margin-top:10px">
+    <summary>+ записать деньги</summary>
+    <div class="body">
+      <input type="text" id="nt-t" placeholder="за что: лендинг для «Лака», продукты" maxlength="52">
+      <div class="row">
+        <input type="number" id="nt-s" placeholder="сколько" min="1" max="10000000" style="width:110px">
+        <select id="nt-k">
+          <option value="in" selected>пришло</option>
+          <option value="out">ушло</option>
+        </select>
+        <button class="btn sm" data-act="addtx">ок</button>
+      </div>
+      <div class="tiny">Приход сам раскидывается по целям: сначала на ту, у которой ближе дата.</div>
+    </div>
+  </details>
+</section>
+
+<!-- ============ РОСТ ============ -->
+<section class="view" id="v-grow">
+  <div class="tabs2" id="growtabs">
+    <button data-sub="sum" class="on" aria-pressed="true">итоги</button>
+    <button data-sub="miles" aria-pressed="false">вехи</button>
+    <button data-sub="skills" aria-pressed="false">навыки</button>
+    <button data-sub="shop" aria-pressed="false">лавка</button>
+  </div>
+
+  <!-- ---- итоги: факты, неделя, бэкап ---- -->
+  <div class="pane on" id="p-sum">
+    <div class="h">Факты <small>без украшений</small></div>
+    <div class="card" id="facts"></div>
+
+    <div class="h">Неделя <small id="weekname"></small></div>
+    <div class="card" id="week"></div>
+
+    <div class="h">Бэкап <small>прогресс живёт только в этом браузере</small></div>
+    <div class="card">
+      <div id="bkstate"></div>
+      <div class="row" style="flex-wrap:wrap;gap:8px;margin-top:12px">
+        <button class="btn sm" data-act="bkfile">скачать файлом</button>
+        <button class="btn sm gh" data-act="backup">бэкап строкой</button>
+      </div>
+      <div class="tiny" style="margin-top:9px">Файл надёжнее: остаётся в «Файлах» или «Загрузках», даже если
+        браузер вычистит данные сайта. Строка — на случай, когда файл некуда положить.</div>
+    </div>
+
+    <div class="h">Восстановление</div>
+    <div class="card">
+      <div class="row" style="flex-wrap:wrap;gap:8px">
+        <button class="btn sm gh" data-act="loadfile">взять из файла</button>
+        <button class="btn sm gh" data-act="restore">вставить строку</button>
+      </div>
+      <input type="file" id="bkfile" accept="application/json,.json,.txt" hidden>
+      <div class="tiny" style="margin-top:9px">Текущий прогресс будет заменён целиком — спросим ещё раз.</div>
+    </div>
+
+    <div class="h">Опасная зона</div>
+    <div class="card">
+      <button class="btn sm gh" data-act="reset">сбросить всё</button>
+      <div class="tiny" style="margin-top:9px">Воронка, заказы, касса и цели исчезнут. Сначала бэкап.</div>
+    </div>
+  </div>
+
+  <!-- ---- вехи ---- -->
+  <div class="pane" id="p-miles">
+    <div class="h">Вехи <small id="milecount"></small></div>
+    <div class="tiny" style="margin-bottom:14px">Разовые события, которые случаются один раз за всю историю.
+      Отмечаешь сама: приложение только подсказывает, когда по цифрам похоже, что готово.</div>
+    <div class="stack" id="miles"></div>
+  </div>
+
+  <!-- ---- навыки ---- -->
+  <div class="pane" id="p-skills">
+    <div class="h">Навыки <small id="treecount"></small></div>
+    <div class="tiny" style="margin-bottom:16px">Ветка открывается по порядку и стоит жетонов. Открыла узел —
+      сделала дело в реальности, а не просто нажала кнопку. Каждый узел даёт +2% XP навсегда.</div>
+    <div id="tree"></div>
+  </div>
+
+  <!-- ---- лавка ---- -->
+  <div class="pane" id="p-shop">
+    <div class="bal">
+      <div class="big" id="balnum">0</div>
+      <div><div class="lab" style="font-weight:700;color:var(--markd)">жетонов на счету</div>
+        <div class="lab">за закрытые дни, отказы и крутилку. Тратятся тут и на навыки</div></div>
+    </div>
+
+    <div class="h">Купоны <em>на руках</em> <small id="coupcount"></small></div>
+    <div class="stack" id="coupons"></div>
+
+    <div class="h">Лавка</div>
+    <div class="stack" id="shop"></div>
+
+    <details class="add" style="margin-top:10px">
+      <summary>+ добавить награду</summary>
+      <div class="body">
+        <input type="text" id="ns-t" placeholder="Чего хочется" maxlength="46">
+        <div class="row">
+          <input type="number" id="ns-c" value="10" min="1" max="200" style="width:90px">
+          <button class="btn sm" data-act="addshop">ок</button>
+        </div>
+        <div class="tiny">Цена в жетонах. Один жетон ≈ один закрытый день.</div>
+      </div>
+    </details>
+  </div>
+</section>
+
+</main>
+
+<nav id="nav">
+  <div class="navin">
+    <button data-tab="day" class="on"><span class="gl2"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="3.5" width="15" height="14" rx="3"/><path d="M6.5 10.5l2.5 2.5 4.5-5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>сегодня</button>
+    <button data-tab="leads"><span class="gl2"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 4.5h16L12 11v5l-4 2v-7L2 4.5Z" stroke-linecap="round" stroke-linejoin="round"/></svg></span>люди</button>
+    <button data-tab="jobs"><span class="gl2"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="2.5" y="6" width="15" height="11.5" rx="2.5"/><path d="M7.5 6V4.4c0-1 .8-1.9 1.9-1.9h1.2c1 0 1.9.8 1.9 1.9V6M2.5 10.5h15" stroke-linecap="round"/></svg></span>заказы</button>
+    <button data-tab="money"><span class="gl2"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7.5"/><path d="M12.3 7.2c-.6-.8-1.4-1.2-2.4-1.2-1.5 0-2.4.9-2.4 2s.9 1.8 2.4 2 2.5.8 2.5 2-1 2-2.5 2c-1 0-1.9-.4-2.4-1.2M10 4.4v11.2" stroke-linecap="round"/></svg></span>деньги</button>
+    <button data-tab="grow"><span class="gl2"><svg width="19" height="19" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2.8 14.6l4.4-5 3.2 2.6 6.8-7.4" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.4 4.8h3.8v3.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>рост</button>
+  </div>
+</nav>
+
+<div id="toast"></div>
+<div id="modal" class="hide"></div>
+<canvas id="fx"></canvas>
+
+<script src="data.js"></script>
+<script src="render.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
