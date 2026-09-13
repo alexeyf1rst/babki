@@ -490,7 +490,7 @@ function renderMine(){
     '<div class="tiny" style="margin-top:10px">С каждого прихода <b style="color:var(--markd)">'+S.cut+
     '%</b> уходит себе, остальное — в цели. Это не транжирство, а единственный способ '+
     'увидеть деньги от работы раньше, чем через полгода. '+
-    (got?'В этом месяце пришло '+rub(got)+', из них себе — '+rub(cutGot)+'.'
+    (got?'В этом месяце пришло '+rub(got)+', из них себе — '+rub(cutGot)
         :'Начнёт копиться с первого заказа.')+'</div>';
 
   const can=S.wants.filter(w=>S.mine>=w.c).length;
