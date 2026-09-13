@@ -127,11 +127,20 @@ const CATNOTE={'поиск':'единственное, что приносит �
   'дело':'то, за что платят, и то, что можно показать',
   'голова':'чтобы хватило не на неделю, а на год'};
 
-/* ---------- лавка: платит он ---------- */
-const SHOP0=[{id:'h1',t:'Кофе и сырник, платит он',c:5},{id:'h2',t:'Доставка вечером',c:12},
-  {id:'h3',t:'Вечер без ноутбука и без чувства вины',c:8},{id:'h4',t:'Все дела по дому на нём',c:10},
-  {id:'h5',t:'Он пишет текст для лендинга',c:14},{id:'h6',t:'Что-то из вишлиста',c:25},
-  {id:'h7',t:'Поездка на выходные',c:60}];
+/* ---------- себе: хотелки за свои, в рублях ----------
+   Сначала платишь себе: с каждого прихода cut процентов уходит в отдельный
+   карман, и только он тратится на эти строчки. Цены такие, чтобы первая
+   хотелка открывалась сразу после первого заказа, а не через полгода. */
+const WANT0=()=>[
+  {id:uid(),t:'Доставка вместо готовки',c:40,ex:1},
+  {id:uid(),t:'Маникюр',c:60,ex:1},
+  {id:uid(),t:'Массаж',c:90,ex:1},
+  {id:uid(),t:'Билеты на концерт',c:150,ex:1},
+  {id:uid(),t:'Худи, на которое давно смотришь',c:180,ex:1},
+  {id:uid(),t:'Кроссовки',c:250,ex:1},
+  {id:uid(),t:'Курс, который откладывала',c:300,ex:1}
+];
+const CUT0=20;   /* сколько процентов с прихода уходит себе */
 const PRIZES=[
   {w:22,t:'+30 XP',k:'xp',v:30},
   {w:14,t:'+70 XP',k:'xp',v:70},
@@ -139,10 +148,10 @@ const PRIZES=[
   {w:10,t:'+2 жетона',k:'tok',v:2},
   {w:10,t:'Заморозка серии',k:'fz',v:1},
   {w:7,t:'×2 XP на завтра',k:'boost',v:1},
-  {w:7,t:'Купон: он ищет десять клиентов за тебя',k:'coup',v:'Он ищет десять клиентов за тебя'},
-  {w:5,t:'Купон: он пишет текст для лендинга',k:'coup',v:'Он пишет текст для лендинга'},
-  {w:4,t:'Купон: свидание по твоему сценарию',k:'coup',v:'Свидание по твоему сценарию'},
-  {w:1,t:'ЛЕГЕНДАРКА: подарок из вишлиста',k:'leg',v:'Подарок из вишлиста'}
+  {w:8,t:'+3 жетона',k:'tok',v:3},
+  {w:5,t:'+150 XP',k:'xp',v:150},
+  {w:3,t:'Заморозка и ×2 XP разом',k:'combo',v:1},
+  {w:1,t:'ЛЕГЕНДАРКА: +10 жетонов и ×2 XP',k:'leg',v:10}
 ];
 
 /* ---------- цели по умолчанию: правятся сразу, это просто пример ---------- */
@@ -161,7 +170,7 @@ const CONVMIN=20;   /* столько касаний нужно, чтобы ве
 const DEF=()=>({v:1,xp:0,tok:0,streak:0,best:0,freeze:2,lastClosed:null,lastBackup:null,bkSnooze:null,
   bal:50,tx:[],goals:GOAL0(),leads:[],jobs:[],price:PRICE0(),upN:0,miles:{},skills:[],
   custom:[],off:[],days:{},quota:null,weekend:1,buy:{},spins:0,boost:null,conv:null,
-  shop:SHOP0.slice(),owned:[],theme:'auto',seen:0});
+  wants:WANT0(),mine:0,cut:CUT0,theme:'auto',seen:0});
 let S=DEF();
 
 /* 0 — пишем нормально, 1 — localStorage отказал (приватный режим, кончилось место) */
@@ -192,8 +201,14 @@ function askPersist(){
 const isKey=k=>typeof k==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(k);
 const num=(v,d)=>{const n=parseFloat(v);return isFinite(n)?n:d};
 function fix(){
-  ['tx','goals','leads','jobs','skills','custom','off','shop','owned'].forEach(k=>{
-    if(!Array.isArray(S[k]))S[k]=k==='shop'?SHOP0.slice():k==='goals'?GOAL0():[]});
+  ['tx','goals','leads','jobs','skills','custom','off','wants'].forEach(k=>{
+    if(!Array.isArray(S[k]))S[k]=k==='wants'?WANT0():k==='goals'?GOAL0():[]});
+  /* лавка на жетоны и купоны от него убраны — старый снимок чистим */
+  delete S.shop; delete S.owned;
+  S.mine=Math.max(0,Math.round(num(S.mine,0)));
+  S.cut=clamp(Math.round(num(S.cut,CUT0)),0,50);
+  S.wants=S.wants.filter(w=>w&&typeof w==='object'&&w.id)
+    .map(w=>{w.c=clamp(Math.round(num(w.c,50)),1,1000000);return w});
   ['days','miles','buy','price'].forEach(k=>{if(!S[k]||typeof S[k]!=='object')S[k]=k==='price'?PRICE0():{}});
   ['xp','tok','streak','best','freeze','spins','upN'].forEach(k=>{S[k]=Math.max(0,parseInt(S[k],10)||0)});
   S.bal=Math.round(num(S.bal,0));
@@ -230,7 +245,7 @@ function fix(){
     j.n=clamp(parseInt(j.n,10)||1,1,40);j.done=clamp(parseInt(j.done,10)||0,0,j.n);
     j.fee=Math.max(0,Math.round(num(j.fee,0)));j.hx=parseInt(j.hx,10)||0;
     if(!isKey(j.due))j.due='';return j});
-  ['custom','shop','owned'].forEach(k=>{S[k]=S[k].filter(x=>x&&typeof x==='object'&&x.id)});
+  S.custom=S.custom.filter(x=>x&&typeof x==='object'&&x.id);
   S.custom=S.custom.map(q=>{q.xp=clamp(parseInt(q.xp,10)||15,5,60);
     if(CATS.indexOf(q.c)<0)q.c='дело';return q});
 }
@@ -320,6 +335,12 @@ const stale=()=>S.leads.filter(l=>STALL.indexOf(l.st)>=0&&dayDiff(l.last,dkey())
   .sort((a,b)=>a.last<b.last?-1:1);
 const noCount=()=>S.leads.filter(l=>l.st==='no').length;
 const nextUp=()=>{const n=paidJobs().length-S.upN*UPSTEP;return UPSTEP-n};
+/* во сколько заказов обходится хотелка: она оплачивается только долей с прихода,
+   поэтому 60 р. себе — это 300 р. заказа, а не 60 */
+function jobsFor(sum){
+  const cut=Math.max(1,S.cut)/100;
+  return (sum/cut)/Math.max(1,avgFee());
+}
 
 /* ---------- когда по цифрам похоже, что веха взята ----------
    Отмечает всё равно она: подсказка не ставит галку, только светится. */

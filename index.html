@@ -215,7 +215,7 @@
     <button data-sub="sum" class="on" aria-pressed="true">итоги</button>
     <button data-sub="miles" aria-pressed="false">вехи</button>
     <button data-sub="skills" aria-pressed="false">навыки</button>
-    <button data-sub="shop" aria-pressed="false">лавка</button>
+    <button data-sub="mine" aria-pressed="false">себе</button>
   </div>
 
   <!-- ---- итоги: факты, неделя, бэкап ---- -->
@@ -270,31 +270,33 @@
     <div id="tree"></div>
   </div>
 
-  <!-- ---- лавка ---- -->
-  <div class="pane" id="p-shop">
+  <!-- ---- себе: доля с прихода и хотелки за свои ---- -->
+  <div class="pane" id="p-mine">
     <div class="bal">
-      <div class="big" id="balnum">0</div>
-      <div><div class="lab" style="font-weight:700;color:var(--markd)">жетонов на счету</div>
-        <div class="lab">за закрытые дни, отказы и крутилку. Тратятся тут и на навыки</div></div>
+      <div class="big" id="minenum">0</div>
+      <div><div class="lab" style="font-weight:700;color:var(--markd)">рублей отложено себе</div>
+        <div class="lab">доля с каждого прихода. Копится сама, тратится только здесь</div></div>
     </div>
 
-    <div class="h">Купоны <em>на руках</em> <small id="coupcount"></small></div>
-    <div class="stack" id="coupons"></div>
+    <div class="card" id="cutbox" style="margin-top:14px"></div>
 
-    <div class="h">Лавка</div>
-    <div class="stack" id="shop"></div>
+    <div class="h">Хотелки <small id="wantcount"></small></div>
+    <div class="stack" id="wants"></div>
 
     <details class="add" style="margin-top:10px">
-      <summary>+ добавить награду</summary>
+      <summary>+ добавить хотелку</summary>
       <div class="body">
-        <input type="text" id="ns-t" placeholder="Чего хочется" maxlength="46">
+        <input type="text" id="nw-t" placeholder="Чего хочется" maxlength="46">
         <div class="row">
-          <input type="number" id="ns-c" value="10" min="1" max="200" style="width:90px">
-          <button class="btn sm" data-act="addshop">ок</button>
+          <input type="number" id="nw-c" value="100" min="1" max="1000000" style="width:110px">
+          <button class="btn sm" data-act="addwant">ок</button>
         </div>
-        <div class="tiny">Цена в жетонах. Один жетон ≈ один закрытый день.</div>
+        <div class="tiny">Цена в рублях. Ставь честно — покупка спишет деньги из кассы по-настоящему.</div>
       </div>
     </details>
+
+    <div class="h">Куплено <em>за свои</em> <small id="boughtcount"></small></div>
+    <div class="card" id="boughtbox"></div>
   </div>
 </section>
 

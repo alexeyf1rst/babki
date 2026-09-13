@@ -391,7 +391,8 @@ function renderMoney(){
   $('#balhint').textContent=S.tx.length?S.tx.length+' '+plural(S.tx.length,'запись','записи','записей'):'';
   const tail=S.tx.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,8);
   $('#cash').innerHTML='<div class="mline"><b>'+Math.round(S.bal).toLocaleString('ru-RU')+'</b>'+
-    '<span>р. в кассе<br>пришло всего '+rub(S.tx.filter(x=>x.k==='in').reduce((a,x)=>a+x.sum,0))+'</span></div>'+
+    '<span>р. в кассе<br>пришло всего '+rub(S.tx.filter(x=>x.k==='in').reduce((a,x)=>a+x.sum,0))+
+      '<br>себе отложено '+rub(S.mine)+'</span></div>'+
     (tail.length?'<table class="gtab" style="margin-top:12px">'+tail.map(x=>
       '<tr><td>'+esc(x.t||'без подписи')+'<br><span class="tiny">'+dshort(x.d)+
         (x.alloc&&x.alloc.length?'  ·  в цель':'')+'</span></td>'+
@@ -475,17 +476,47 @@ function renderGrow(){
       }).join('')+'</div></div>';
   }).join('');
 
-  $('#balnum').textContent=S.tok;
-  $('#coupcount').textContent=S.owned.length?S.owned.length+' шт.':'';
-  $('#coupons').innerHTML=S.owned.length?S.owned.map(o=>
-    '<div class="coupon'+(o.leg?' leg':'')+'"><div class="t">'+esc(o.t)+
-    '<div class="tiny" style="font-weight:400;color:inherit;opacity:.75">получен '+dshort(o.d)+'</div></div>'+
-    '<button class="btn sm gh" data-act="usecoupon" data-id="'+o.id+'">использовать</button></div>').join('')
-    :'<div class="tiny">Пока пусто. Купоны падают из крутилки и покупаются ниже за жетоны.</div>';
-  $('#shop').innerHTML=S.shop.map(i=>
-    '<div class="item"><div class="t">'+esc(i.t)+'<small>◆ '+i.c+'</small></div>'+
-    '<button class="btn sm'+(S.tok<i.c?' gh':'')+'" data-act="buy" data-id="'+i.id+'"'+(S.tok<i.c?' disabled':'')+'>купить</button>'+
-    '<button class="del" data-act="delshop" data-id="'+i.id+'" aria-label="Удалить">×</button></div>').join('');
+  renderMine();
+}
+
+/* ---------- себе: доля с прихода и хотелки за свои ---------- */
+function renderMine(){
+  $('#minenum').textContent=Math.round(S.mine).toLocaleString('ru-RU');
+  const got=inMonth(),cutGot=Math.round(got*S.cut/100);
+  $('#cutbox').innerHTML=
+    '<div class="row" style="flex-wrap:wrap;gap:7px">'+[10,20,30,50].map(v=>
+      '<button class="btn sm'+(S.cut===v?'':' gh')+'" data-act="setcut" data-id="'+v+'">'+v+'%</button>').join('')+
+    '</div>'+
+    '<div class="tiny" style="margin-top:10px">С каждого прихода <b style="color:var(--markd)">'+S.cut+
+    '%</b> уходит себе, остальное — в цели. Это не транжирство, а единственный способ '+
+    'увидеть деньги от работы раньше, чем через полгода. '+
+    (got?'В этом месяце пришло '+rub(got)+', из них себе — '+rub(cutGot)+'.'
+        :'Начнёт копиться с первого заказа.')+'</div>';
+
+  const can=S.wants.filter(w=>S.mine>=w.c).length;
+  $('#wantcount').textContent=S.wants.length?(can?can+' по карману':'копится')+' из '+S.wants.length:'';
+  $('#wants').innerHTML=S.wants.length?S.wants.slice().sort((a,b)=>a.c-b.c).map(w=>{
+    const ok=S.mine>=w.c,need=w.c-S.mine,j=jobsFor(w.c);
+    return '<div class="item"><div class="t">'+esc(w.t)+'<small>'+rub(w.c)+'  ·  '+
+      (ok?(j<1?'меньше заказа':Math.ceil(j)+' '+plural(Math.ceil(j),'заказ','заказа','заказов'))
+         :'ещё '+rub(need))+'</small></div>'+
+      '<button class="btn sm'+(ok?'':' gh')+'" data-act="buywant" data-id="'+w.id+'"'+(ok?'':' disabled')+'>купить</button>'+
+      '<button class="del" data-act="delwant" data-id="'+w.id+'" aria-label="Удалить">×</button></div>';
+  }).join(''):'<div class="tiny">Пусто. Впиши хоть одну мелочь: цель на год не тянет, '+
+    'а маникюр через неделю — тянет.</div>';
+  if(S.wants.some(w=>w.ex))
+    $('#wants').insertAdjacentHTML('beforeend',
+      '<div class="tiny">Список — пример. Замени на то, чего хочется тебе, и поставь свои цены.</div>');
+
+  const bought=S.tx.filter(x=>x.k==='out'&&x.want).sort((a,b)=>a.d<b.d?1:-1);
+  $('#boughtcount').textContent=bought.length?bought.length+' шт.':'';
+  $('#boughtbox').innerHTML=bought.length
+    ?'<table class="gtab">'+bought.slice(0,10).map(x=>
+      '<tr><td>'+esc(x.t)+'<br><span class="tiny">'+dshort(x.d)+'</span></td>'+
+      '<td class="m">'+rub(x.sum)+'</td></tr>').join('')+'</table>'+
+      '<div class="tiny" style="margin-top:10px">Всё это куплено на деньги, которых год назад не было. '+
+      'Удалить покупку можно в кассе на вкладке ДЕНЬГИ — вернётся и в кассу, и себе.</div>'
+    :'<div class="tiny">Пока ничего. Первая покупка за свои — момент, ради которого всё это и затевалось.</div>';
 }
 
 function render(){renderHead();renderDay();renderLeads();renderJobs();renderMoney();renderGrow();

@@ -275,7 +275,7 @@ details.add .body{padding:12px 14px;display:flex;flex-direction:column;gap:9px}
   background:var(--dones);border-radius:6px;padding:2px 7px}
 .node .btn{margin-top:9px}
 
-/* ---------- лавка ---------- */
+/* ---------- себе ---------- */
 .bal{display:flex;align-items:center;gap:12px;padding:15px;border-radius:20px;
   background:linear-gradient(120deg,var(--marks),var(--card));border:1px solid var(--line)}
 .bal .big{font-family:var(--disp);font-weight:700;font-size:44px;line-height:.85;color:var(--markd);
@@ -285,11 +285,6 @@ details.add .body{padding:12px 14px;display:flex;flex-direction:column;gap:9px}
   background:var(--card)}
 .item .t{flex:1;font-size:14px;font-weight:600;line-height:1.25}
 .item .t small{display:block;font-weight:400;font-size:11.5px;color:var(--ink3);font-family:var(--mono)}
-.coupon{padding:12px 13px;border-radius:14px;border:1.5px dashed var(--mark);background:var(--marks);
-  display:flex;align-items:center;gap:10px}
-.coupon .t{flex:1;font-size:13.5px;font-weight:700;color:var(--markd)}
-.coupon.leg{border-color:var(--sun);background:var(--suns)}
-.coupon.leg .t{color:var(--sun)}
 
 /* ---------- переключатель блоков внутри вкладки ---------- */
 .tabs2{display:flex;gap:4px;margin:0 0 16px;padding:4px;border:1px solid var(--line);

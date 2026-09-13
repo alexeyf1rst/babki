@@ -1,5 +1,5 @@
 /* Своё дело — офлайн-кэш. Меняешь файлы приложения — подними версию. */
-const V='svoe-delo-v2';
+const V='svoe-delo-v3';
 const SHELL=['./','./index.html','./styles.css','./fonts.css','./data.js','./render.js','./app.js',
   './manifest.webmanifest','./icon.svg','./icon-192.png','./icon-512.png','./icon-180.png',
   './fonts/manrope-400-800-cyrillic.woff2',

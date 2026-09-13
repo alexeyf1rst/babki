@@ -16,7 +16,7 @@ function applyTheme(){
     d.media=S.theme==='auto'?'(prefers-color-scheme: dark)':S.theme==='dark'?'all':'not all';
   }
 }
-const PANES=['sum','miles','skills','shop'];
+const PANES=['sum','miles','skills','mine'];
 function sub(name){
   if(PANES.indexOf(name)<0)return;
   document.querySelectorAll('#growtabs button').forEach(b=>{
@@ -174,8 +174,14 @@ function addTx(t,sum,kind,job){
   sum=Math.max(0,Math.round(sum));
   if(!sum)return null;
   const x={id:uid(),d:dkey(),t:t,sum:sum,k:kind};
-  if(kind==='in'){S.bal+=sum;x.alloc=allocIn(sum);if(job)x.job=job}
-  else S.bal-=sum;
+  if(kind==='in'){
+    S.bal+=sum;
+    /* сначала платишь себе: доля уходит в свой карман, остальное делят цели */
+    x.mine=Math.round(sum*S.cut/100);
+    S.mine+=x.mine;
+    x.alloc=allocIn(sum-x.mine);
+    if(job)x.job=job;
+  }else S.bal-=sum;
   S.tx.push(x);
   return x;
 }
@@ -185,9 +191,13 @@ function delTx(id){
   if(!confirm('Удалить запись «'+(x.t||'без подписи')+'» на '+rub(x.sum)+'?'))return;
   if(x.k==='in'){
     S.bal-=x.sum;
+    S.mine=Math.max(0,S.mine-(x.mine||0));
     (x.alloc||[]).forEach(a=>{const g=S.goals.find(v=>v.id===a.g);if(g)g.got=Math.max(0,g.got-a.sum)});
     if(x.job){const j=S.jobs.find(v=>v.id===x.job);if(j)j.paid=0}
-  }else S.bal+=x.sum;
+  }else{
+    S.bal+=x.sum;
+    if(x.want)S.mine+=x.sum;      /* вернули покупку — вернулось и в свой карман */
+  }
   S.tx=S.tx.filter(v=>v.id!==id);
 }
 
@@ -213,7 +223,10 @@ function givePrize(p){
   else if(p.k==='tok')S.tok+=p.v;
   else if(p.k==='fz'){S.freeze=Math.min(freezeCap(),S.freeze+1);extra='Один пропущенный день теперь не убьёт серию.'}
   else if(p.k==='boost'){S.boost=shift(dkey(),1);extra='Завтра каждое дело приносит вдвое больше.'}
-  else{S.owned.push({id:uid(),t:p.v,d:dkey(),leg:p.k==='leg'?1:0});extra='Купон лежит в лавке. Предъявлять — ему.'}
+  else if(p.k==='combo'){S.freeze=Math.min(freezeCap(),S.freeze+1);S.boost=shift(dkey(),1);
+    extra='И заморозка, и двойной XP на завтра.'}
+  else if(p.k==='leg'){S.tok+=p.v;S.boost=shift(dkey(),1);
+    extra='Десять жетонов — это сразу ветка навыков целиком. И двойной XP на завтра.'}
   burst(p.k==='leg'?180:50);
   render();
   modal('<div class="kicker">'+(p.k==='leg'?'легендарка':'выпало')+'</div>'+
@@ -444,7 +457,7 @@ function act(a,id,el){
       if(x&&k==='in'){
         const toGoal=(x.alloc||[]).reduce((a,v)=>a+v.sum,0);
         burst(100);
-        toast('+'+rub(sum)+(toGoal?' · в цели ушло '+rub(toGoal):''));
+        toast('+'+rub(sum)+(x.mine?' · себе '+rub(x.mine):'')+(toGoal?' · в цели '+rub(toGoal):''));
       }else toast('−'+rub(sum));
       break;
     }
@@ -472,26 +485,31 @@ function act(a,id,el){
         '<div class="sub">'+esc(n.task)+'<br><br>Множитель XP теперь ×'+(1+0.02*S.skills.length).toFixed(2)+'.</div>'+
         '<button class="btn w" data-act="closemodal">дальше</button>');break;
     }
-    case 'buy':{
-      const it=S.shop.find(x=>x.id===id);
-      if(!it)return;
-      if(S.tok<it.c){toast('не хватает жетонов');return}
-      if(!confirm('Купить «'+it.t+'» за ◆ '+it.c+'?'))return;
-      S.tok-=it.c;S.owned.push({id:uid(),t:it.t,d:dkey(),leg:0});burst(80);
-      toast('куплено — предъяви ему');break;
+    case 'setcut':{
+      S.cut=clamp(parseInt(id,10)||CUT0,0,50);
+      toast('себе уходит '+S.cut+'% с каждого прихода');break;
     }
-    case 'usecoupon':{
-      const c=S.owned.find(x=>x.id===id);
-      if(c&&!confirm('Использовать «'+c.t+'»? Купон исчезнет.'))return;
-      S.owned=S.owned.filter(x=>x.id!==id);toast('использовано');break;
+    case 'buywant':{
+      const w=S.wants.find(x=>x.id===id);
+      if(!w)return;
+      if(S.mine<w.c){toast('себе отложено меньше — не хватает '+rub(w.c-S.mine));return}
+      if(!confirm('Купить «'+w.t+'» за '+rub(w.c)+'?\nДеньги спишутся из кассы по-настоящему.'))return;
+      S.mine-=w.c;
+      const x=addTx(w.t,w.c,'out');
+      if(x)x.want=1;
+      burst(120);
+      modal('<div class="kicker">за свои</div><div class="big">'+esc(w.t)+'</div>'+
+        '<div class="sub">'+rub(w.c)+' из кассы. Это не подарок и не аванс — это деньги, '+
+        'которые ты заработала сама.</div>'+
+        '<button class="btn w" data-act="closemodal">забрать</button>');break;
     }
-    case 'addshop':{
-      const t=$('#ns-t').value.trim();
-      if(!t){toast('впиши награду');return}
-      S.shop.push({id:uid(),t:t,c:clamp(parseInt($('#ns-c').value,10)||10,1,200)});
-      $('#ns-t').value='';break;
+    case 'addwant':{
+      const t=$('#nw-t').value.trim();
+      if(!t){toast('впиши, чего хочется');return}
+      S.wants.push({id:uid(),t:t,c:clamp(parseInt($('#nw-c').value,10)||100,1,1000000)});
+      $('#nw-t').value='';toast('хотелка добавлена');break;
     }
-    case 'delshop':S.shop=S.shop.filter(x=>x.id!==id);break;
+    case 'delwant':S.wants=S.wants.filter(x=>x.id!==id);break;
 
     /* ---- прочее ---- */
     case 'spin':closeModal();doSpin();return;
